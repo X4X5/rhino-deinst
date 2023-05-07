@@ -5,6 +5,11 @@ if ! command -v dialog > /dev/null; then
   echo "dialog is not installed, installing..." >&2
   sudo apt-get install dialog -y
 fi
+#Install nala if not installed for better terminal output
+if ! command -v nala > /dev/null; then
+  echo "nala is not installed, installing" >&2
+  sudo apt-get install nala -y
+fi
 
 SELECTED=($( dialog --backtitle "Press 'space' to toggle an option, use arrow keys to go up/down, press enter to continue" --scrollbar --separate-output --checklist "Select Desktop Environment(s)" $(expr $(tput lines) - 5) $(expr $(tput cols) - 5) 5 \
   "1" "GNOME (Ubuntu)" OFF \
@@ -23,16 +28,15 @@ SELECTED=($( dialog --backtitle "Press 'space' to toggle an option, use arrow ke
   "14" "Budgie" OFF \
   "15" "Unity" OFF \
   "16" "Cinnamon" OFF \
-  "17" "Phosh core" OFF \
-  "18" "UKUI" OFF \
-  "19" "LXDE" OFF \
-  "20" "i3" OFF \
-  "21" "Sway" OFF \
-  "22" "AwesomeWM" OFF \
-  "23" "bspwm" OFF \
-  "24" "DWM" OFF \
-  "25" "Openbox" OFF \
-  "26" "Enlightenment" OFF \
+  "17" "UKUI" OFF \
+  "18" "LXDE" OFF \
+  "19" "i3" OFF \
+  "20" "Sway" OFF \
+  "21" "AwesomeWM" OFF \
+  "22" "bspwm" OFF \
+  "23" "DWM" OFF \
+  "24" "Openbox" OFF \
+  "25" "Enlightenment" OFF \
   3>&1 1>&2 2>&3))
 
 for i in "${SELECTED[@]}"; do
@@ -90,7 +94,6 @@ for i in "${SELECTED[@]}"; do
       desktop+=("ubuntu-budgie-desktop")
       login_manager="budgie-lightdm-theme-base"
       extra_packages="budgie-extras-common budgie-extras-daemon"
-      snap_package_classic="ubuntu-budgie-welcome"
       ;;
     14)
       desktop+=("budgie-desktop")
@@ -100,52 +103,47 @@ for i in "${SELECTED[@]}"; do
     15)
       desktop+=("ubuntu-unity-desktop")
       login_manager="lightdm"
-      extra_packages="dbus-x11 yaru-theme-unity yaru-theme-icon yaru-theme-gtk yaru-theme-sound unity-tweak-tool atril eom vlc pluma mate-system-monitor unity-lens-music unity-lens-photos unity-lens-video"
-      remove_packages="totem eog nautilus gnome-system-monitor gnome-text-editor gedit"
+      extra_packages="dbus-x11 yaru-theme-unity yaru-theme-icon yaru-theme-gtk yaru-theme-sound unity-tweak-tool unity-lens-music unity-lens-photos unity-lens-video"
       ;;
     16)
       desktop+=("cinnamon")
       login_manager="lightdm"
-      ;; 
-    17)
-      desktop+=("phose-core")
-      login_manager="gdm3"
       ;;
-    18)
+    17)
       desktop+=("ukui-desktop-environment")
       login_manager="ukui-greeter"
       extra_packages="obconf"
       ;;
-    19)
+    18)
       desktop+=("lxde")
       login_manager="lxdm"
       ;;
-    20)
+    19)
       desktop+=("i3")
       login_manager="lightdm"
       ;; 
-    21)
+    20)
       desktop+=("sway")
       login_manager="sddm"
       ;; 
-    22)
+    21)
       desktop+=("awesome")
       login_manager="lightdm"
       ;;
-    23)
+    22)
       desktop+=("bspwm")
       login_manager="lightdm"
       ;;
-    24)
+    23)
       desktop+=("dwm")
       login_manager="lightdm"
       ;;
-    25)
+    24)
       desktop+=("openbox")
       login_manager="lightdm"
       extra_packages="obconf"
       ;;
-    26)
+    25)
       desktop+=("enlightenment")
       login_manager="lightdm"
       ;;
@@ -155,7 +153,7 @@ done
 clear
 
 echo "Updating package cache..."
-sudo apt-get update
+sudo nala update
 
 echo "Checking for package existence..."
 for i in "${desktop[@]}"; do
@@ -173,30 +171,16 @@ else
   echo "$i does not exist, exiting..." >&2
   exit 1
 fi
-
 echo "Installing desktop and login manager..."
-sudo apt-get install -y ${desktop[@]} "${login_manager}" ${extra_packages}
-if [[ ${desktop[@]} == "ubuntu-unity-desktop" ]]; then
-  echo "Installing Unity 7.6"
-  sudo wget https://repo.unityx.org/unityx.key
-  sudo apt-key add unityx.key
-  echo 'deb https://repo.unityx.org/main testing main' | sudo tee /etc/apt/sources.list.d/unity-x.list
-  sudo apt-get update && sudo apt-get install -y unity
-  fi
-if [[ -n $snap_package_classic ]]; then
-  sudo apt-get install snapd -y
-  sudo snap install ${snap_package_classic} --classic
-fi
+sudo nala install -y ${desktop[@]} "${login_manager}" ${extra_packages}
 if [[ -n $remove_packages ]]; then
     echo "Removing unnecessary packages"
-    sudo apt remove -y ${remove_packages}
-    sudo apt autoremove -y
-fi
-if ! [[ ${desktop[@]} == "ubuntu-desktop gnome-session-flashback vanilla-gnome-desktop" ]]; then
-  echo "Removing gnome-shell"
-  sudo apt autoremove '^gnome-shell' --purge -y
+    sudo nala remove -y ${remove_packages}
+    sudo nala autoremove -y
 fi
 echo "Set login manager to $login_manager"
 sudo dpkg-reconfigure "${login_manager}"
 echo "Done!"
 clear
+echo "Your desktop is now installed and ready for you to use. Go ahead and reboot your system to start using it!"
+done
